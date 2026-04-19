@@ -4,3 +4,4 @@ docs/ai_generated/*
 
 # Environment variables
 .env
+coverage/
