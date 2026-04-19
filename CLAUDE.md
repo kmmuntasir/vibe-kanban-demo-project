@@ -33,7 +33,7 @@ Frontend is a single `public/index.html` served by Express static middleware.
 - Node.js 18+, Express.js, ES modules (`import`/`export`)
 - SQLite via `better-sqlite3` (synchronous API, WAL mode)
 - Vanilla HTML/CSS/JS — no frameworks, no build step
-- Jest or Vitest for tests
+- Jest for tests (requires `--experimental-vm-modules` via `NODE_OPTIONS`)
 
 ## Commands
 
@@ -45,7 +45,7 @@ rtk npm run dev             # Dev server with hot-reload
 rtk npm run start           # Production server
 rtk npm run lint            # ESLint
 rtk npm run lint:fix        # ESLint auto-fix
-npx jest src/path.test.js   # Single test file
+NODE_OPTIONS=--experimental-vm-modules npx jest src/path.test.js   # Single test file
 ```
 
 ## Git Conventions
