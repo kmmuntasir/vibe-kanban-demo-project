@@ -24,7 +24,6 @@ export const userRepository = {
   },
 
   findAll() {
-    // Workshop gap — implemented in Batch 4
-    return []
+    return getDb().prepare(`SELECT * FROM ${TABLE_NAME} ORDER BY created_at DESC`).all()
   },
 }
