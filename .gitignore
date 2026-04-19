@@ -5,3 +5,7 @@ docs/ai_generated/*
 # Environment variables
 .env
 coverage/
+
+# Editor
+.idea
+.vscode
