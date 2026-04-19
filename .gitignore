@@ -9,3 +9,7 @@ coverage/
 # Editor
 .idea
 .vscode
+
+
+node_modules/
+data/
