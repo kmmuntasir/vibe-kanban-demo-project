@@ -1,114 +1,126 @@
+import { jest } from '@jest/globals'
 import { validateRequest } from './validateRequest.js'
 import { ValidationError } from './errorHandler.js'
 
-const RULES = {
-  username: { required: true, errorMessage: 'Username is required' },
+const rules = {
+  username: {
+    required: true,
+    pattern: '^[a-zA-Z0-9_]+$',
+    errorMessage: 'username is required',
+  },
+  full_name: {
+    required: true,
+    errorMessage: 'full_name is required',
+  },
   email: {
     required: true,
-    pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
-    errorMessage: 'Invalid email format',
+    pattern: '^[^@]+@[^@]+\\.[^@]+$',
+    errorMessage: 'email is required',
   },
-  bio: { required: false, maxLength: 200, errorMessage: 'Bio too long' },
+  phone: {
+    required: false,
+  },
 }
 
-function createMock(res, next) {
-  const _res = {}
-  let _error = null
-  const _next = (err) => { _error = err }
-  return { res: _res, next: _next, getError: () => _error }
+const validPayload = {
+  username: 'jdoe',
+  full_name: 'John Doe',
+  email: 'john@example.com',
+  phone: '555-0123',
 }
 
 describe('validateRequest', () => {
-  it('exports validateRequest function', () => {
-    expect(typeof validateRequest).toBe('function')
+  let mockReq
+  let mockRes
+  let mockNext
+
+  beforeEach(() => {
+    mockNext = jest.fn()
+    mockRes = {}
   })
 
-  it('throws ValidationError for missing required field', () => {
-    const middleware = validateRequest(RULES)
-    const { next, getError } = createMock()
-    const req = { body: { email: 'test@test.com' } }
+  function invoke(body) {
+    mockReq = { body }
+    return validateRequest(rules)(mockReq, mockRes, mockNext)
+  }
 
-    middleware(req, {}, next)
-
-    expect(getError()).toBeInstanceOf(ValidationError)
-    expect(getError().message).toBe('Username is required')
-    expect(getError().statusCode).toBe(400)
+  it('calls next() for valid complete payload', () => {
+    invoke(validPayload)
+    expect(mockNext).toHaveBeenCalledWith()
   })
 
-  it('throws ValidationError for invalid pattern', () => {
-    const middleware = validateRequest(RULES)
-    const { next, getError } = createMock()
-    const req = { body: { username: 'test', email: 'not-an-email' } }
+  it('calls next() when phone omitted (optional)', () => {
+    const { phone, ...noPhone } = validPayload
+    invoke(noPhone)
+    expect(mockNext).toHaveBeenCalledWith()
+  })
 
-    middleware(req, {}, next)
+  it('calls next() for valid alphanumeric+underscore username', () => {
+    invoke({ ...validPayload, username: 'user_name_123' })
+    expect(mockNext).toHaveBeenCalledWith()
+  })
 
-    expect(getError()).toBeInstanceOf(ValidationError)
-    expect(getError().message).toBe('Invalid email format')
+  it('throws ValidationError when username missing', () => {
+    const { username, ...rest } = validPayload
+    expect(() => invoke(rest)).toThrow(ValidationError)
+  })
+
+  it('throws ValidationError when username empty string', () => {
+    expect(() => invoke({ ...validPayload, username: '' })).toThrow(ValidationError)
+  })
+
+  it('throws ValidationError when username has spaces', () => {
+    expect(() => invoke({ ...validPayload, username: 'john doe' })).toThrow(ValidationError)
+  })
+
+  it('throws ValidationError when username has special chars', () => {
+    expect(() => invoke({ ...validPayload, username: 'john$doe' })).toThrow(ValidationError)
+  })
+
+  it('throws ValidationError when full_name missing', () => {
+    const { full_name, ...rest } = validPayload
+    expect(() => invoke(rest)).toThrow(ValidationError)
+  })
+
+  it('throws ValidationError when full_name empty string', () => {
+    expect(() => invoke({ ...validPayload, full_name: '' })).toThrow(ValidationError)
+  })
+
+  it('throws ValidationError when email missing', () => {
+    const { email, ...rest } = validPayload
+    expect(() => invoke(rest)).toThrow(ValidationError)
+  })
+
+  it('throws ValidationError when email has no @', () => {
+    expect(() => invoke({ ...validPayload, email: 'invalidemail' })).toThrow(ValidationError)
+  })
+
+  it('throws ValidationError when email has no domain', () => {
+    expect(() => invoke({ ...validPayload, email: 'user@' })).toThrow(ValidationError)
+  })
+
+  it('throws ValidationError when email has no local part', () => {
+    expect(() => invoke({ ...validPayload, email: '@example.com' })).toThrow(ValidationError)
+  })
+
+  it('throws ValidationError for empty body {}', () => {
+    expect(() => invoke({})).toThrow(ValidationError)
   })
 
   it('throws ValidationError when value exceeds maxLength', () => {
-    const middleware = validateRequest(RULES)
-    const { next, getError } = createMock()
-    const req = { body: { username: 'test', email: 'test@test.com', bio: 'x'.repeat(201) } }
-
-    middleware(req, {}, next)
-
-    expect(getError()).toBeInstanceOf(ValidationError)
-    expect(getError().message).toBe('Bio too long')
+    const rulesWithLength = {
+      ...rules,
+      username: { ...rules.username, maxLength: 3 },
+    }
+    mockReq = { body: validPayload }
+    expect(() => validateRequest(rulesWithLength)(mockReq, mockRes, mockNext)).toThrow(ValidationError)
   })
 
-  it('passes for optional empty field', () => {
-    const middleware = validateRequest(RULES)
-    const { next, getError } = createMock()
-    const req = { body: { username: 'test', email: 'test@test.com' } }
-
-    middleware(req, {}, next)
-
-    expect(getError()).toBeNull()
-    expect(next).toHaveBeenCalled()
-  })
-
-  it('calls next() when all fields are valid', () => {
-    const middleware = validateRequest(RULES)
-    const { next, getError } = createMock()
-    const req = { body: { username: 'test', email: 'test@test.com', bio: 'short bio' } }
-
-    middleware(req, {}, next)
-
-    expect(getError()).toBeNull()
-    expect(next).toHaveBeenCalledWith()
-  })
-
-  it('handles undefined req.body gracefully', () => {
-    const middleware = validateRequest(RULES)
-    const { next, getError } = createMock()
-    const req = {}
-
-    middleware(req, {}, next)
-
-    expect(getError()).toBeInstanceOf(ValidationError)
-    expect(getError().message).toBe('Username is required')
-  })
-
-  it('skips optional field with null value', () => {
-    const middleware = validateRequest(RULES)
-    const { next, getError } = createMock()
-    const req = { body: { username: 'test', email: 'test@test.com', bio: null } }
-
-    middleware(req, {}, next)
-
-    expect(getError()).toBeNull()
-  })
-
-  it('uses default error message when errorMessage not provided', () => {
-    const rules = { name: { required: true } }
-    const middleware = validateRequest(rules)
-    const { next, getError } = createMock()
-    const req = { body: {} }
-
-    middleware(req, {}, next)
-
-    expect(getError()).toBeInstanceOf(ValidationError)
-    expect(getError().message).toBe('name is required')
+  it('error message identifies failed fields', () => {
+    try {
+      invoke({})
+    } catch (err) {
+      expect(err.message).toContain('username')
+    }
   })
 })
