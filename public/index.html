@@ -72,9 +72,27 @@
       // TODO: Implement in workshop
     }
 
-    function addUser(event) {
+    async function addUser(event) {
       event.preventDefault();
-      // TODO: Implement in workshop
+      const form = event.target;
+      const data = Object.fromEntries(new FormData(form));
+
+      try {
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to add user');
+        }
+        form.reset();
+        hideError();
+        fetchUsers();
+      } catch (err) {
+        showError(err.message);
+      }
     }
 
     function renderUsers(users) {
@@ -82,7 +100,13 @@
     }
 
     function showError(message) {
-      // TODO: Implement in workshop
+      const el = document.getElementById('error-message');
+      el.textContent = message;
+      el.style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('error-message').style.display = 'none';
     }
 
     document.getElementById('add-user-form').addEventListener('submit', addUser);
