@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h1 { margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    .placeholder-row td { text-align: center; color: #999; font-style: italic; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; margin-bottom: 4px; font-weight: bold; }
+    input[type="text"], input[type="email"], input[type="tel"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 8px 16px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    #error-message { display: none; color: #dc3545; margin-bottom: 12px; padding: 8px; background: #f8d7da; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>User Management</h1>
+
+    <div id="error-message"></div>
+
+    <h2>User List</h2>
+    <table id="user-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody id="user-table-body">
+        <tr class="placeholder-row">
+          <td colspan="6">User list will appear here (not implemented yet)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Add User</h2>
+    <form id="add-user-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required placeholder="Username">
+      </div>
+      <div class="form-group">
+        <label for="full_name">Full Name</label>
+        <input type="text" id="full_name" name="full_name" required placeholder="Full Name">
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required placeholder="Email">
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" name="phone" placeholder="Phone">
+      </div>
+      <button type="submit">Add User</button>
+    </form>
+  </div>
+
+  <script>
+    function fetchUsers() {
+      // TODO: Implement in workshop
+    }
+
+    function addUser(event) {
+      event.preventDefault();
+      // TODO: Implement in workshop
+    }
+
+    function renderUsers(users) {
+      // TODO: Implement in workshop
+    }
+
+    function showError(message) {
+      // TODO: Implement in workshop
+    }
+
+    document.getElementById('add-user-form').addEventListener('submit', addUser);
+  </script>
+</body>
+</html>
