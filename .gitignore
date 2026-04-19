@@ -2,3 +2,5 @@
 docs/ai_generated/*
 !docs/ai_generated/README.md
 
+# Environment variables
+.env
