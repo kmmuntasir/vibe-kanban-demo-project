@@ -1,5 +1,5 @@
-import { getDb } from '../src/utils/db.js'
-import { CREATE_TABLE_SQL, INSERT_COLUMNS, TABLE_NAME } from '../src/models/userModel.js'
+import { getDb } from '../utils/db.js'
+import { CREATE_TABLE_SQL, INSERT_COLUMNS, TABLE_NAME } from '../models/userModel.js'
 
 const SEED_USERS = [
   ['jdoe', 'John Doe', 'john@example.com', '555-0101'],
