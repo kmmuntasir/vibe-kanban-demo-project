@@ -10,3 +10,15 @@ export const getAllUsers = (req, res, next) => {
   const users = userService.getAllUsers()
   res.json(users)
 }
+
+export const updateUser = (req, res, next) => {
+  const { id } = req.params
+  const user = userService.updateUser(id, req.body)
+  res.json({ data: user })
+}
+
+export const deleteUser = (req, res, next) => {
+  const { id } = req.params
+  userService.deleteUser(id)
+  res.status(204).send()
+}
