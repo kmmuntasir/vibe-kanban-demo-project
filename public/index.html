@@ -50,7 +50,7 @@
       </tbody>
     </table>
 
-    <h2>Add User</h2>
+    <h2 id="form-title">Add User</h2>
     <form id="add-user-form">
       <div class="form-group">
         <label for="username">Username</label>
@@ -108,6 +108,7 @@
           }
           editingUserId = null;
           submitBtn.textContent = 'Add User';
+          document.getElementById('form-title').textContent = 'Add User';
         } else {
           res = await fetch('/api/users', {
             method: 'POST',
@@ -138,6 +139,7 @@
 
       editingUserId = id;
       submitBtn.textContent = 'Update User';
+      document.getElementById('form-title').textContent = 'Edit User';
     }
 
     async function deleteUser(id) {
@@ -154,6 +156,7 @@
           editingUserId = null;
           document.getElementById('add-user-form').reset();
           submitBtn.textContent = 'Add User';
+          document.getElementById('form-title').textContent = 'Add User';
         }
         fetchUsers();
       } catch (err) {
