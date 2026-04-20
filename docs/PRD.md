@@ -14,11 +14,15 @@ The app is intentionally **partially implemented**. A live workshop will demonst
 - Provide a working skeleton that workshop participants can extend using an AI agent.
 - Demonstrate that AI agents can read a PRD, understand a partially-built codebase, and ship working features end-to-end.
 - Keep the tech stack simple enough that the focus stays on the **development process**, not tooling complexity.
+- Full user CRUD — **Add User**, **Show Users List**, **Update User**, and **Delete User** operations.
 
 ### Non-Goals
 - Production-grade security, authentication, or deployment.
 - Responsive design or cross-browser polish.
 - Multi-user or concurrent access handling.
+- Pagination or search/filter.
+- Unit or integration tests (unless demonstrated as part of the workshop).
+- Docker or deployment configuration.
 
 ---
 
@@ -129,7 +133,7 @@ Creates a new user record.
 - `email`: required, valid email format
 - `phone`: optional
 
-### 5.2 `GET /api/users` — List All Users *(not implemented — workshop demo)*
+### 5.2 `GET /api/users` — List All Users
 
 Returns all users sorted by `created_at` descending.
 
@@ -147,8 +151,6 @@ Returns all users sorted by `created_at` descending.
   }
 ]
 ```
-
-> **Note:** This endpoint is intentionally omitted from the starter code. It will be built live during the workshop.
 
 ---
 
@@ -211,7 +213,6 @@ After the workshop demo, the application should satisfy:
 
 ## 9. Out of Scope / Future Considerations
 
-- Delete or update user operations
 - Pagination or search/filter
 - User authentication or authorization
 - Unit or integration tests (unless demonstrated as part of the workshop)
