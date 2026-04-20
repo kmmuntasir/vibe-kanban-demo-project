@@ -42,3 +42,26 @@ export const VALIDATION_RULES = {
     maxLength: 20,
   },
 };
+
+export const UPDATE_COLUMNS = ['username', 'full_name', 'email', 'phone'];
+
+export const UPDATE_VALIDATION_RULES = {
+  username: {
+    required: false,
+    pattern: '^[a-zA-Z0-9_]+$',
+    maxLength: 50,
+  },
+  full_name: {
+    required: false,
+    maxLength: 100,
+  },
+  email: {
+    required: false,
+    pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
+    maxLength: 255,
+  },
+  phone: {
+    required: false,
+    maxLength: 20,
+  },
+};
