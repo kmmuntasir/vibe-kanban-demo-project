@@ -183,35 +183,7 @@ Positioned below the User List section.
 - On success (201): clear form, show success message, refresh user list table
 - On error: display error message near the form
 
----
-
-## 7. Intentional Gaps (Workshop Demo Scope)
-
-These features are deliberately left unimplemented so they can be built live:
-
-| #  | Gap                                          | Layer (files)                                                           |
-|----|----------------------------------------------|-------------------------------------------------------------------------|
-| 1  | `GET /api/users` endpoint                    | Backend — route, controller, service, repository all missing for GET   |
-| 2  | Frontend fetch + table rendering on load     | Frontend                                                               |
-| 3  | Wiring "Add User" form to refresh the table  | Frontend                                                               |
-
-The workshop facilitator will use an AI coding agent to implement all three gaps in a live demonstration.
-
----
-
-## 8. Acceptance Criteria
-
-After the workshop demo, the application should satisfy:
-
-- [ ] `GET /api/users` returns all users as JSON
-- [ ] The User List table populates automatically on page load
-- [ ] Adding a user via the form immediately updates the table
-- [ ] Validation errors display meaningful messages in the UI
-- [ ] Duplicate username/email returns a clear error, not a crash
-
----
-
-## 9. Out of Scope / Future Considerations
+## 7. Out of Scope / Future Considerations
 
 - Pagination or search/filter
 - User authentication or authorization
