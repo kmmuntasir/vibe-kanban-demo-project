@@ -32,27 +32,18 @@ export const userRepository = {
   },
 
   update(id, userData) {
-    const db = getDb()
     const fields = UPDATE_COLUMNS.filter(col => userData[col] !== undefined)
-
-    if (fields.length === 0) {
-      return db.prepare(`SELECT * FROM ${TABLE_NAME} WHERE id = ?`).get(id)
-    }
+    if (fields.length === 0) return this.findById(id)
 
     const setClause = fields.map(col => `${col} = ?`).join(', ')
     const values = fields.map(col => userData[col])
 
-    db.prepare(
-      `UPDATE ${TABLE_NAME} SET ${setClause} WHERE id = ?`
-    ).run(...values, id)
-
-    return db.prepare(`SELECT * FROM ${TABLE_NAME} WHERE id = ?`).get(id)
+    getDb().prepare(`UPDATE ${TABLE_NAME} SET ${setClause} WHERE id = ?`).run(...values, id)
+    return this.findById(id)
   },
 
   remove(id) {
-    const result = getDb().prepare(
-      `DELETE FROM ${TABLE_NAME} WHERE id = ?`
-    ).run(id)
+    const result = getDb().prepare(`DELETE FROM ${TABLE_NAME} WHERE id = ?`).run(id)
     return result.changes > 0
   },
 }

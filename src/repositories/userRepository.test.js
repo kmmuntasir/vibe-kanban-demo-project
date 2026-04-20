@@ -23,6 +23,16 @@ afterEach(() => {
 })
 
 describe('userRepository', () => {
+  function insertTestUser(overrides = {}) {
+    return userRepository.insertUser({
+      username: 'testuser',
+      full_name: 'Test User',
+      email: 'test@example.com',
+      phone: '555-0000',
+      ...overrides,
+    })
+  }
+
   describe('insertUser', () => {
     it('inserts user, returns full record with id and created_at', () => {
       const user = userRepository.insertUser({
@@ -130,17 +140,12 @@ describe('userRepository', () => {
 
   describe('findById', () => {
     it('returns user when found', () => {
-      const inserted = userRepository.insertUser({
-        username: 'byid',
-        full_name: 'By Id',
-        email: 'byid@example.com',
-        phone: null,
-      })
-
+      const inserted = insertTestUser()
       const user = userRepository.findById(inserted.id)
       expect(user).toBeDefined()
       expect(user.id).toBe(inserted.id)
-      expect(user.username).toBe('byid')
+      expect(user.username).toBe('testuser')
+      expect(user.email).toBe('test@example.com')
     })
 
     it('returns undefined when not found', () => {
@@ -150,51 +155,37 @@ describe('userRepository', () => {
   })
 
   describe('update', () => {
-    it('updates specified fields only', () => {
-      const inserted = userRepository.insertUser({
-        username: 'update1',
-        full_name: 'Original Name',
-        email: 'update1@example.com',
-        phone: '555-0000',
-      })
-
-      const updated = userRepository.update(inserted.id, { full_name: 'New Name' })
-      expect(updated.full_name).toBe('New Name')
-      expect(updated.username).toBe('update1')
-      expect(updated.email).toBe('update1@example.com')
+    it('updates single field and preserves others', () => {
+      const inserted = insertTestUser()
+      const updated = userRepository.update(inserted.id, { full_name: 'Updated Name' })
+      expect(updated.full_name).toBe('Updated Name')
+      expect(updated.username).toBe('testuser')
+      expect(updated.email).toBe('test@example.com')
       expect(updated.phone).toBe('555-0000')
     })
 
-    it('updates multiple fields', () => {
-      const inserted = userRepository.insertUser({
-        username: 'multi',
-        full_name: 'Multi',
-        email: 'multi@example.com',
-        phone: null,
-      })
-
+    it('updates multiple fields at once', () => {
+      const inserted = insertTestUser()
       const updated = userRepository.update(inserted.id, {
-        full_name: 'Changed',
+        full_name: 'New Name',
+        email: 'new@example.com',
         phone: '555-9999',
       })
-      expect(updated.full_name).toBe('Changed')
+      expect(updated.full_name).toBe('New Name')
+      expect(updated.email).toBe('new@example.com')
       expect(updated.phone).toBe('555-9999')
+      expect(updated.username).toBe('testuser')
     })
 
-    it('returns current row when no fields provided', () => {
-      const inserted = userRepository.insertUser({
-        username: 'noop',
-        full_name: 'Noop',
-        email: 'noop@example.com',
-        phone: null,
-      })
-
+    it('returns current row unchanged when no fields provided', () => {
+      const inserted = insertTestUser()
       const result = userRepository.update(inserted.id, {})
       expect(result.id).toBe(inserted.id)
-      expect(result.username).toBe('noop')
+      expect(result.username).toBe('testuser')
+      expect(result.full_name).toBe('Test User')
     })
 
-    it('returns undefined for non-existent id', () => {
+    it('returns undefined when user not found', () => {
       const result = userRepository.update(9999, { full_name: 'Ghost' })
       expect(result).toBeUndefined()
     })
@@ -202,19 +193,13 @@ describe('userRepository', () => {
 
   describe('remove', () => {
     it('deletes user and returns true', () => {
-      const inserted = userRepository.insertUser({
-        username: 'delete1',
-        full_name: 'Delete Me',
-        email: 'delete1@example.com',
-        phone: null,
-      })
-
+      const inserted = insertTestUser()
       const result = userRepository.remove(inserted.id)
       expect(result).toBe(true)
       expect(userRepository.findById(inserted.id)).toBeUndefined()
     })
 
-    it('returns false for non-existent id', () => {
+    it('returns false when user not found', () => {
       const result = userRepository.remove(9999)
       expect(result).toBe(false)
     })
