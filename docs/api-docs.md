@@ -114,6 +114,121 @@ Returns empty array `[]` when no users exist.
 
 ---
 
+### `PUT /api/users/:id` — Update a User
+
+Updates an existing user record. Full replacement — all required fields must be present.
+
+#### Request
+
+```
+PUT /api/users/1
+Content-Type: application/json
+```
+
+```json
+{
+  "username": "jdoe",
+  "full_name": "John Doe Updated",
+  "email": "john.updated@example.com",
+  "phone": "555-9999"
+}
+```
+
+#### URL Parameters
+
+| Param | Type    | Description       |
+|-------|---------|-------------------|
+| id    | INTEGER | User ID to update |
+
+#### Fields
+
+| Field      | Type   | Required | Rules                        |
+|------------|--------|----------|------------------------------|
+| username   | string | Yes      | Non-empty, alphanumeric + `_` |
+| full_name  | string | Yes      | Non-empty                    |
+| email      | string | Yes      | Valid email format           |
+| phone      | string | No       | —                            |
+
+#### Responses
+
+| Status | Meaning              | Body                                                  |
+|--------|----------------------|-------------------------------------------------------|
+| 200    | User updated         | `{ "id": 1, "username": "jdoe", ... }`                |
+| 400    | Validation error     | `{ "error": "username is required" }`                 |
+| 404    | User not found       | `{ "error": "User not found" }`                       |
+| 409    | Duplicate field      | `{ "error": "username already exists" }`              |
+
+#### Example — Success
+
+```json
+// 200 OK
+{
+  "id": 1,
+  "username": "jdoe",
+  "full_name": "John Doe Updated",
+  "email": "john.updated@example.com",
+  "phone": "555-9999"
+}
+```
+
+#### Example — Not Found
+
+```json
+// 404 Not Found
+{
+  "error": "User not found"
+}
+```
+
+#### Notes
+
+- Uniqueness checks exclude the user being updated (keeping the same username/email is allowed)
+
+---
+
+### `DELETE /api/users/:id` — Delete a User
+
+Deletes a user record by ID.
+
+#### Request
+
+```
+DELETE /api/users/1
+```
+
+#### URL Parameters
+
+| Param | Type    | Description       |
+|-------|---------|-------------------|
+| id    | INTEGER | User ID to delete |
+
+#### Responses
+
+| Status | Meaning       | Body                            |
+|--------|---------------|---------------------------------|
+| 200    | User deleted  | `{ "message": "User deleted" }` |
+| 404    | User not found | `{ "error": "User not found" }` |
+
+#### Example — Success
+
+```json
+// 200 OK
+{
+  "message": "User deleted"
+}
+```
+
+#### Example — Not Found
+
+```json
+// 404 Not Found
+{
+  "error": "User not found"
+}
+```
+
+---
+
 ## Error Response Format
 
 All errors follow a consistent shape:
@@ -127,6 +242,7 @@ All errors follow a consistent shape:
 | Status | When                                |
 |--------|--------------------------------------|
 | 400    | Missing/invalid required fields      |
+| 404    | User not found (update/delete)       |
 | 409    | Unique constraint violation (username or email) |
 | 500    | Unexpected server error               |
 

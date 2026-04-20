@@ -1,191 +1,125 @@
-# Product Requirements Document — Vibe Kanban Demo Project
+# PRD — Vibe Kanban Demo Project
 
-## 1. Overview
+## Overview
 
-A lightweight demo application designed to showcase the velocity gains of Agentic AI-assisted development. The project is a minimal **User Management** interface — an Express.js backend serving a single-page HTML frontend, backed by an SQLite database.
+Workshop demo for AI-assisted dev velocity. User Management app — Express backend + vanilla HTML frontend + SQLite. Intentionally partially built. Live workshop: AI agent completes missing pieces.
 
-The app is intentionally **partially implemented**. A live workshop will demonstrate how an AI agent completes the missing pieces in real time.
+## Goals / Non-Goals
 
----
+**Goals:**
+- Working skeleton extensible via AI agent
+- Demo AI reading PRD + shipping features end-to-end
+- Simple tech stack — focus on process, not tooling
+- Full CRUD: Add, List, Update, Delete users
 
-## 2. Goals & Non-Goals
+**Non-Goals:**
+- Production auth/security/deployment
+- Responsive/cross-browser polish
+- Multi-user/concurrent access
+- Pagination/search/filter
+- Tests (unless workshop demo)
+- Docker/deploy config
 
-### Goals
-- Provide a working skeleton that workshop participants can extend using an AI agent.
-- Demonstrate that AI agents can read a PRD, understand a partially-built codebase, and ship working features end-to-end.
-- Keep the tech stack simple enough that the focus stays on the **development process**, not tooling complexity.
-- Full user CRUD — **Add User**, **Show Users List**, **Update User**, and **Delete User** operations.
+## Tech Stack
 
-### Non-Goals
-- Production-grade security, authentication, or deployment.
-- Responsive design or cross-browser polish.
-- Multi-user or concurrent access handling.
-- Pagination or search/filter.
-- Unit or integration tests (unless demonstrated as part of the workshop).
-- Docker or deployment configuration.
+| Layer | Tech | Why |
+|-------|------|-----|
+| Backend | Express.js (Node) | Minimal, widely known |
+| DB | SQLite (`better-sqlite3`) | Zero-config, file-based |
+| Frontend | Vanilla HTML/CSS/JS | Single `index.html`, static |
+| Styling | Plain CSS | Near-zero deps |
 
----
-
-## 3. Tech Stack
-
-| Layer      | Technology          | Rationale                                      |
-|------------|---------------------|-------------------------------------------------|
-| Backend    | Express.js (Node)   | Minimal setup, widely understood                |
-| Database   | SQLite (via `better-sqlite3` or `sqlite3`) | Zero-config, file-based, no external DB server |
-| Frontend   | Vanilla HTML/CSS/JS | Single `index.html` served as static file       |
-| Styling    | Plain CSS (no framework) | Keep dependencies near zero                  |
-
-### Project Structure (Expected)
-
-The backend follows a **layered architecture** to showcase real-world API best practices. Each layer has a single responsibility and communicates only with its adjacent layers.
+## Project Structure
 
 ```
-├── src/
-│   ├── app.js                         # Express app setup (middleware, route mounting)
-│   ├── server.js                      # Entry point — starts HTTP server
-│   ├── routes/
-│   │   └── userRoutes.js              # Route definitions (path → controller method)
-│   ├── controllers/
-│   │   └── userController.js          # Request parsing, response shaping, delegates to service
-│   ├── services/
-│   │   └── userService.js             # Business logic, validation, orchestration
-│   ├── repositories/
-│   │   └── userRepository.js          # Data access — all SQL queries live here
-│   ├── models/
-│   │   └── userModel.js               # Table schema, column definitions, constants
-│   ├── middleware/
-│   │   ├── errorHandler.js            # Global error-handling middleware
-│   │   └── validateRequest.js         # Request body validation middleware
-│   └── utils/
-│       └── db.js                      # Database connection singleton
-├── database/
-│   ├── init.js                        # Schema creation & seed data
-│   └── app.db                         # SQLite database file (generated at runtime)
-├── public/
-│   └── index.html                     # Single-page frontend
-├── package.json
-├── docs/
-│   └── PRD.md                         # This document
-└── README.md
+src/
+  app.js                      # Express setup (middleware, routes)
+  server.js                   # Entry — starts HTTP server
+  routes/userRoutes.js        # Path → controller binding
+  controllers/userController.js # Parse req, call service, send res
+  services/userService.js     # Business logic, validation
+  repositories/userRepository.js # SQL queries only
+  models/userModel.js         # Schema, columns, table defs
+  middleware/
+    errorHandler.js           # Global error handler
+    validateRequest.js        # Request body validation
+  utils/db.js                 # DB connection singleton
+database/
+  init.js                     # Schema + seed data
+  app.db                      # SQLite file (runtime-generated)
+public/index.html             # Single-page frontend
+package.json
+docs/PRD.md                   # This doc
+README.md
 ```
 
-#### Layer Responsibilities
+### Layer Rules
 
-| Layer | File(s) | Role |
-|-------|---------|------|
-| **Routes** | `routes/*.js` | Bind HTTP paths + methods to controller functions. No logic. |
-| **Controllers** | `controllers/*.js` | Extract params from `req`, call service, send `res`. No business logic. |
-| **Services** | `services/*.js` | Business rules, validation, error handling. Calls repository. No HTTP details. |
-| **Repositories** | `repositories/*.js` | Raw SQL / ORM calls. Returns plain objects. No business logic. |
-| **Models** | `models/*.js` | Schema definitions, column names, table names. Single source of truth for structure. |
-| **Middleware** | `middleware/*.js` | Cross-cutting concerns — validation, error handling. |
-| **Utils** | `utils/db.js` | Database connection singleton used by all repositories. |
+| Layer | Role |
+|-------|------|
+| Routes | HTTP path + method → controller. No logic. |
+| Controllers | Extract req params, call service, send res. No business logic. |
+| Services | Business rules, validation. No HTTP details. |
+| Repositories | Raw SQL. Plain objects. No business logic. |
+| Models | Schema/column/table definitions. Single source of truth. |
+| Middleware | Validation, error handling. Cross-cutting. |
+| Utils | DB connection singleton. |
 
----
-
-## 4. Data Model
+## Data Model
 
 ### `users` Table
 
-| Column     | Type    | Constraints                   |
-|------------|---------|-------------------------------|
-| id         | INTEGER | PRIMARY KEY, AUTOINCREMENT    |
-| username   | TEXT    | NOT NULL, UNIQUE              |
-| full_name  | TEXT    | NOT NULL                      |
-| email      | TEXT    | NOT NULL, UNIQUE              |
-| phone      | TEXT    | —                             |
-| created_at | TEXT    | DEFAULT CURRENT_TIMESTAMP     |
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY, AUTOINCREMENT |
+| username | TEXT | NOT NULL, UNIQUE |
+| full_name | TEXT | NOT NULL |
+| email | TEXT | NOT NULL, UNIQUE |
+| phone | TEXT | — |
+| created_at | TEXT | DEFAULT CURRENT_TIMESTAMP |
 
-The schema is created on server startup if the table does not already exist.
+Schema auto-created on startup if missing.
 
----
+## API Spec
 
-## 5. API Specification
+Full docs: [`docs/api-docs.md`](api-docs.md)
 
-All endpoints are defined in `src/routes/userRoutes.js`, handled by `src/controllers/userController.js`, backed by `src/services/userService.js` and `src/repositories/userRepository.js`.
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/users` | Add User |
+| GET | `/api/users` | List All Users |
+| PUT | `/api/users/:id` | Update User |
+| DELETE | `/api/users/:id` | Delete User |
 
-### 5.1 `POST /api/users` — Add a User
+All endpoints: Routes → Controllers → Services → Repositories → DB.
 
-Creates a new user record.
+## Frontend Spec
 
-**Request Body (JSON):**
+Single `public/index.html`, served at `GET /`.
 
-```json
-{
-  "username": "jdoe",
-  "full_name": "John Doe",
-  "email": "john@example.com",
-  "phone": "555-0123"
-}
-```
-
-**Responses:**
-
-| Status | Meaning              | Body                                      |
-|--------|----------------------|-------------------------------------------|
-| 201    | User created         | `{ "id": 1, "username": "jdoe", ... }`   |
-| 400    | Validation error     | `{ "error": "username is required" }`     |
-| 409    | Duplicate username/email | `{ "error": "username already exists" }` |
-
-**Validation Rules:**
-- `username`: required, non-empty, alphanumeric + underscores
-- `full_name`: required, non-empty
-- `email`: required, valid email format
-- `phone`: optional
-
-### 5.2 `GET /api/users` — List All Users
-
-Returns all users sorted by `created_at` descending.
-
-**Response (200):**
-
-```json
-[
-  {
-    "id": 1,
-    "username": "jdoe",
-    "full_name": "John Doe",
-    "email": "john@example.com",
-    "phone": "555-0123",
-    "created_at": "2026-04-19T10:00:00Z"
-  }
-]
-```
-
----
-
-## 6. Frontend Specification
-
-The frontend is a single `public/index.html` file, served statically by Express at `GET /`.
-
-### 6.1 User List Section
+### User List
 
 - Heading: **"User List"**
-- Should contain an HTML `<table>` with columns: ID, Username, Full Name, Email, Phone
-- **Starter state:** Instead of a populated table, display the message:
-  > *"This feature is not implemented yet."*
-- **Workshop goal:** Replace the placeholder with a live table that fetches data from `GET /api/users` on page load.
+- `<table>` columns: ID, Username, Full Name, Email, Phone
+- Starter: placeholder *"This feature is not implemented yet."*
+- Workshop: replace with live table fetching `GET /api/users` on page load
 
-### 6.2 Add User Form
+### Add User Form
 
-Positioned below the User List section.
+Below User List.
 
-| Field      | Input Type | Required | Placeholder / Label |
-|------------|------------|----------|---------------------|
-| Username   | text       | Yes      | "Username"          |
-| Full Name  | text       | Yes      | "Full Name"         |
-| Email      | email      | Yes      | "Email"             |
-| Phone      | tel        | No       | "Phone"             |
+| Field | Type | Required | Placeholder |
+|-------|------|----------|-------------|
+| Username | text | Yes | "Username" |
+| Full Name | text | Yes | "Full Name" |
+| Email | email | Yes | "Email" |
+| Phone | tel | No | "Phone" |
 
-**Behavior:**
-- Submit button labeled **"Add User"**
-- On submit: `POST /api/users` with JSON body
-- On success (201): clear form, show success message, refresh user list table
-- On error: display error message near the form
+- Submit: **"Add User"**
+- On submit: `POST /api/users` (JSON)
+- Success (201): clear form, show message, refresh table
+- Error: show error near form
 
-## 7. Out of Scope / Future Considerations
+## Out of Scope
 
-- Pagination or search/filter
-- User authentication or authorization
-- Unit or integration tests (unless demonstrated as part of the workshop)
-- Docker or deployment configuration
+Pagination/search, auth, tests (unless workshop), Docker/deploy
