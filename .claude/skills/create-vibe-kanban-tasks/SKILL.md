@@ -5,40 +5,40 @@ description: Create tasks in Vibe Kanban Board from a task plan file. Use when u
 
 # Create Kanban Tasks Skill
 
-Read a task plan file and create every task as a Vibe Kanban issue in the specified project, preserving all content, order, and dependencies.
+Read task plan file. Create each task as Vibe Kanban issue. Preserve content, order, dependencies.
 
 ## Inputs
 
-The user must provide two things (either explicitly or implied by context):
+Need two things (explicit or implied by context):
 
-1. **Task plan file path** — A markdown file containing numbered tasks with descriptions, acceptance criteria, and dependencies (e.g., `docs/task_plan/frontend-es-module-migration/frontend-esm-migration-plan-tasks.md`)
-2. **Project name** — The Vibe Kanban project to create issues in (e.g., "Nano Review")
+1. **Task plan file path** — markdown with numbered tasks, descriptions, acceptance criteria, dependencies (e.g., `docs/task_plan/frontend-es-module-migration/frontend-esm-migration-plan-tasks.md`)
+2. **Project name** — Vibe Kanban project target (e.g., "Nano Review")
 
-If the user says something like "create all these tasks in the todo column for the <project-name> project", extract the project name from their message. If the file path is not clear, ask the user.
+If user says "create all these tasks in the todo column for the <project-name> project", extract project name from message. If file path unclear, ask.
 
 ## Execution Steps
 
-Follow these steps exactly, in order. Do not skip or merge steps.
+Follow in order. No skip, no merge.
 
 ### Step 1: Read the task plan file
 
-Read the entire task plan file using the Read tool. You MUST read the full file — never truncate. If the file is large, read it in chunks until you have the complete content.
+Read entire file with Read tool. MUST read full file — no truncate. If large, read in chunks.
 
 ### Step 2: Discover the Vibe Kanban project
 
-Call these MCP tools in sequence:
+Call MCP tools in sequence:
 
-1. `list_organizations` — get the organization ID
-2. `list_organizations` result → take the first (or only) org's `id`
+1. `list_organizations` — get org ID
+2. `list_organizations` result → take first (or only) org's `id`
 3. `list_projects` with `organization_id` set to that org ID
-4. Find the project whose name matches the user-specified project name (case-insensitive match)
-5. Save the `project_id` for all subsequent calls
+4. Find project matching user-specified name (case-insensitive)
+5. Save `project_id` for subsequent calls
 
-If the project is not found, stop and tell the user which projects are available. Do not guess.
+Project not found → stop, list available projects. No guess.
 
 ### Step 3: Parse all tasks from the file
 
-Parse the markdown file and extract every task. Tasks are typically structured as:
+Parse markdown. Extract every task. Typical structure:
 
 ```
 ### Task N: <title>
@@ -49,15 +49,15 @@ Parse the markdown file and extract every task. Tasks are typically structured a
 **Dependencies**: ...
 ```
 
-For each task, extract:
+Extract per task:
 - **Task number** (from heading, e.g., "Task 5")
-- **Title** (from heading, e.g., "Extract `js/stream-parser.js` — JSONL stream parser")
-- **Full description** — everything between the title heading and the Acceptance Criteria or Dependencies section, including code blocks, tables, and bullet points
-- **Acceptance criteria** — all checkbox items, preserving the full text of each
+- **Title** (from heading)
+- **Full description** — everything between title heading and Acceptance Criteria/Dependencies, including code blocks, tables, bullets
+- **Acceptance criteria** — all checkbox items, full text preserved
 - **Subtasks** — if present, all subtask items
-- **Dependencies** — task numbers this task depends on (e.g., "Tasks 2, 4, 5" or "None")
+- **Dependencies** — task numbers (e.g., "Tasks 2, 4, 5" or "None")
 
-Store all parsed tasks in an ordered list. Count them and report the total to the user before proceeding.
+Store parsed tasks in ordered list. Count and report total before proceeding.
 
 ### Step 4: Create issues one at a time
 
@@ -65,7 +65,7 @@ For **each task** in order (Task 1, Task 2, Task 3, ...):
 
 #### Build the description
 
-Construct the issue description as a single markdown string with these sections:
+Construct issue description as single markdown string:
 
 ````markdown
 ## Description
@@ -83,7 +83,7 @@ Construct the issue description as a single markdown string with these sections:
 <dependency text from the plan, e.g., "Tasks 2, 4, 5" or "None">
 ````
 
-If the task has subtasks, add them between Description and Acceptance Criteria:
+If task has subtasks, add between Description and Acceptance Criteria:
 
 ````markdown
 ## Subtasks
@@ -95,56 +95,56 @@ If the task has subtasks, add them between Description and Acceptance Criteria:
 
 #### Call create_issue
 
-Use the `create_issue` MCP tool with these exact parameters:
+Use `create_issue` MCP tool:
 
 | Parameter | Value |
 |-----------|-------|
 | `title` | **Required.** Format: `Task N: <title>` (e.g., `"Task 5: Extract js/stream-parser.js — JSONL stream parser"`) |
-| `description` | **Required.** The full markdown description built above |
-| `project_id` | **Required.** The UUID discovered in Step 2 |
-| `priority` | Only set if the task plan explicitly mentions priority (e.g., "urgent", "high", "medium", "low"). Otherwise omit this parameter entirely — do not pass null. |
-| `parent_issue_id` | Only set if the task is explicitly marked as a subtask of another task. Otherwise omit. |
+| `description` | **Required.** Full markdown description built above |
+| `project_id` | **Required.** UUID from Step 2 |
+| `priority` | Only set if plan explicitly mentions priority (e.g., "urgent", "high", "medium", "low"). Otherwise omit entirely — no null. |
+| `parent_issue_id` | Only set if task explicitly marked as subtask of another. Otherwise omit. |
 
-**Critical rules for create_issue calls:**
+**Critical rules:**
 
-- You MUST pass the `project_id` parameter. Never omit it.
-- The `title` MUST include the task number prefix (e.g., "Task 1:", "Task 12:").
-- The `description` MUST contain the full content. Never summarize, abbreviate, or truncate. Include all code blocks, tables, and lists verbatim.
-- Save the returned `id` (issue UUID) for every created issue — you need these for linking dependencies in Step 5.
+- MUST pass `project_id`. Never omit.
+- `title` MUST include task number prefix (e.g., "Task 1:", "Task 12:").
+- `description` MUST contain full content. No summarize, abbreviate, truncate. Include all code blocks, tables, lists verbatim.
+- Save returned `id` (issue UUID) for every created issue — need these for Step 5.
 
 #### After each creation
 
-Report progress to the user: "Created Task N: <title>"
+Report: "Created Task N: <title>"
 
 ### Step 5: Link dependencies
 
-After ALL issues are created, iterate through the tasks again and create dependency relationships.
+After ALL issues created, iterate tasks again. Create dependency relationships.
 
-For each task that has dependencies listed (not "None"):
+For each task with dependencies (not "None"):
 
-- Parse the dependency task numbers (e.g., "Tasks 2, 4, 5" → [2, 4, 5])
-- For each dependency task number, call `create_issue_relationship` with:
-  - `issue_id` — the UUID of the dependency task (the one being depended upon, i.e., the blocker)
-  - `related_issue_id` — the UUID of the current task (the one that is blocked)
+- Parse dependency task numbers (e.g., "Tasks 2, 4, 5" → [2, 4, 5])
+- For each, call `create_issue_relationship` with:
+  - `issue_id` — UUID of dependency task (the blocker)
+  - `related_issue_id` — UUID of current task (the blocked)
   - `relationship_type` — `"blocking"`
 
-This means: "Task 2 blocks Task 8" → `issue_id` = Task 2's UUID, `related_issue_id` = Task 8's UUID.
+"Task 2 blocks Task 8" → `issue_id` = Task 2's UUID, `related_issue_id` = Task 8's UUID.
 
 Report: "Linked dependencies for Task N: blocked by Tasks X, Y, Z"
 
 ### Step 6: Set initial status
 
-If the user specified a target column/status (e.g., "todo column"), update each created issue's status.
+If user specified target column/status (e.g., "todo column"), update each issue's status.
 
-Call `update_issue` for each issue with:
-- `issue_id` — the UUID
-- `status` — the status name (e.g., `"todo"`)
+Call `update_issue` per issue:
+- `issue_id` — UUID
+- `status` — status name (e.g., `"todo"`)
 
-The status name must match exactly what the project uses. If unsure, create the issues without setting status and inform the user they can move them manually.
+Status name must match project exactly. Unsure → create without status, inform user to move manually.
 
 ### Step 7: Final report
 
-After all tasks are created and dependencies linked, report:
+After all tasks created and dependencies linked:
 
 ```
 Done. Created N tasks in project "<project-name>":
@@ -158,17 +158,17 @@ Dependencies linked: X relationships
 
 ## Error Handling
 
-- If `create_issue` fails for a task, report the error, skip that task, and continue with the next one. Do not stop the entire process.
-- If a dependency references a task that failed to create, skip that dependency link and report it.
-- If the project is not found, list available projects and stop.
-- If the file cannot be read, ask the user to verify the path.
+- `create_issue` fails → report error, skip task, continue. Don't stop entire process.
+- Dependency references failed task → skip that link, report it.
+- Project not found → list available projects, stop.
+- File unreadable → ask user verify path.
 
 ## Important Rules
 
-1. **Never truncate** — Every description must contain the complete content from the plan file. This is the most important rule.
-2. **Never skip tasks** — Create every task found in the file, from first to last.
-3. **Never summarize** — Copy descriptions, acceptance criteria, and code blocks verbatim.
-4. **Maintain order** — Create tasks in the order they appear in the file (Task 1, Task 2, ...).
-5. **One at a time** — Create each issue individually (no batching). Wait for each `create_issue` call to complete before proceeding to the next.
-6. **Save UUIDs** — Store every returned issue ID. You need them all for dependency linking.
-7. **Title format** — Always prefix with "Task N: " so tasks are easily identifiable on the board.
+1. **Never truncate** — descriptions must contain complete content. Most important rule.
+2. **Never skip tasks** — create every task found, first to last.
+3. **Never summarize** — copy descriptions, acceptance criteria, code blocks verbatim.
+4. **Maintain order** — create in file order (Task 1, Task 2, ...).
+5. **One at a time** — create each issue individually (no batching). Wait for each `create_issue` before next.
+6. **Save UUIDs** — store every returned issue ID. Need all for dependency linking.
+7. **Title format** — always prefix "Task N: " for easy board identification.

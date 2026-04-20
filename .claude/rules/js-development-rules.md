@@ -2,7 +2,7 @@
 
 ## General
 
-Node.js 18+ LTS, Express.js, ES modules (`import`/`export`). No TypeScript.
+Node.js 18+ LTS, Express.js, ESM (`import`/`export`). No TypeScript.
 
 ### Project Structure
 
@@ -19,13 +19,13 @@ public/             # Static HTML/CSS/JS files served by Express
 ### Package Conventions
 
 - `package.json` with `"type": "module"` for ESM.
-- Dependencies minimal — Express, better-sqlite3, and a few utilities. No heavy frameworks, no ORM.
+- Minimal deps — Express, better-sqlite3, few utilities. No heavy frameworks, no ORM.
 - Scripts: `start`, `dev`, `test`, `lint`.
 
 ### Error Handling
 
-- Async route handlers wrapped to catch rejected promises (use `express-async-errors` or manual try/catch wrappers).
-- Custom error classes for app-specific errors (`NotFoundError`, `ValidationError`, `AuthError`).
+- Wrap async routes to catch rejected promises (`express-async-errors` or manual try/catch).
+- Custom error classes: `NotFoundError`, `ValidationError`, `AuthError`.
 
 ```js
 class AppError extends Error {
@@ -48,7 +48,7 @@ class ValidationError extends AppError {
 }
 ```
 
-- Centralized error handling middleware — never send stack traces in production.
+- Centralized error middleware. No stack traces in production.
 
 ```js
 app.use((err, req, res, _next) => {
@@ -57,24 +57,24 @@ app.use((err, req, res, _next) => {
 });
 ```
 
-- HTTP status codes: 400 for validation, 401 for auth, 404 for not found, 500 for server errors.
+- Status codes: 400 validation, 401 auth, 404 not found, 500 server.
 
 ### Logging
 
-- Structured logging (JSON format in production). Use a logging library or a simple wrapper around `console` with levels.
-- Never log sensitive data (passwords, tokens, session secrets).
-- Log key events: server start, requests (at debug level), errors, auth failures.
+- Structured JSON logging in production. Use library or `console` wrapper with levels.
+- Never log passwords, tokens, secrets.
+- Log: server start, requests (debug), errors, auth failures.
 
 ### Concurrency
 
-- Express handles concurrency via Node's event loop — no goroutine equivalents.
-- Use `setImmediate` / `process.nextTick` only when needed, not as a general pattern.
-- Database writes serialized via better-sqlite3's synchronous API (no race conditions).
-- Avoid blocking the event loop with heavy CPU work.
+- Express uses Node event loop — no goroutine equivalents.
+- `setImmediate` / `process.nextTick` only when needed.
+- better-sqlite3 synchronous API serializes DB writes — no races.
+- Avoid blocking event loop with heavy CPU work.
 
 ### Environment Configuration
 
-All config via environment variables. No config files.
+All config via env vars. No config files.
 
 | Variable | Required | Default |
 |---|---|---|
@@ -86,32 +86,32 @@ All config via environment variables. No config files.
 
 ### HTTP Server
 
-- `http` + Express — no alternative frameworks.
-- CORS configured for appropriate origins.
+- `http` + Express only. No alternative frameworks.
+- CORS for appropriate origins.
 - JSON body parser with size limits.
 
 ```js
 app.use(express.json({ limit: '1mb' }));
 ```
 
-- Rate limiting for API routes.
-- Static file serving for `public/` directory.
+- Rate limiting on API routes.
+- Static file serving for `public/`.
 
 ### Security
 
-- No secrets in code — all via environment variables.
-- Parameterized queries only (better-sqlite3 handles this via `?` placeholders).
-- Input validation at system boundaries (express-validator or manual checks).
-- HTTP-only, secure, same-site cookies for sessions.
+- No secrets in code — env vars only.
+- Parameterized queries only (better-sqlite3 `?` placeholders).
+- Input validation at boundaries (express-validator or manual).
+- HTTP-only, secure, same-site session cookies.
 - Helmet.js for security headers.
-- No `eval`, no `innerHTML` without sanitization.
+- No `eval`, no unsanitized `innerHTML`.
 
 ### Database (SQLite)
 
-- Use better-sqlite3 (synchronous API, no callback complexity).
-- One database connection per process (better-sqlite3 is not thread-safe).
-- Migrations stored as numbered SQL files in `src/db/migrations/`.
-- Always use parameterized queries — never string interpolation for SQL.
+- better-sqlite3 — synchronous API, no callback complexity.
+- One connection per process (not thread-safe).
+- Migrations as numbered SQL files in `src/db/migrations/`.
+- Parameterized queries always — never string interpolation.
 
 ```js
 // Good
@@ -121,7 +121,7 @@ db.prepare('SELECT * FROM boards WHERE id = ?').get(boardId);
 db.prepare(`SELECT * FROM boards WHERE id = '${boardId}'`).get();
 ```
 
-- WAL mode for better read concurrency.
+- WAL mode for read concurrency.
 
 ```js
 db.pragma('journal_mode = WAL');

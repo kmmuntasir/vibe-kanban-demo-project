@@ -2,7 +2,7 @@
 
 ## Overview
 
-Use Jest or Vitest as the test framework for this project. Both provide built-in assertion libraries, mocking, and coverage reporting. Vitest is preferred for ESM projects; Jest is preferred for CommonJS projects. Be consistent — pick one and use it throughout.
+Use Jest or Vitest. Both have built-in assertions, mocking, coverage. Vitest for ESM, Jest for CommonJS. Pick one, stay consistent.
 
 ## Test Organization
 
@@ -22,13 +22,13 @@ src/
         database.test.js
 ```
 
-Tests live alongside the code they test, in `*.test.js` or `*.spec.js` files within the same directory.
+Tests co-located with source in `*.test.js` or `*.spec.js` files.
 
 ## Unit Tests
 
 ### Describe/It Structure
 
-The preferred pattern for organizing tests:
+Preferred test organization pattern:
 
 ```js
 describe('validateBoardPayload', () => {
@@ -53,7 +53,7 @@ describe('validateBoardPayload', () => {
 
 ### Setup and Teardown
 
-Use `beforeEach`, `afterEach`, `beforeAll`, `afterAll` for common setup:
+Use `beforeEach`, `afterEach`, `beforeAll`, `afterAll` for shared setup:
 
 ```js
 describe('BoardService', () => {
@@ -98,7 +98,7 @@ it('moves a card to a different column', async () => {
 
 ## HTTP Handler Testing
 
-Use `supertest` with the Express app for handler tests:
+Use `supertest` with Express app for handler tests:
 
 ```js
 const request = require('supertest');
@@ -135,11 +135,11 @@ describe('POST /api/boards', () => {
 });
 ```
 
-**Important**: Import the Express `app` instance, not the HTTP server. The app should be created in a separate module from `server.listen()` so tests can use `supertest` to manage the server lifecycle.
+**Important**: Import Express `app` instance, not HTTP server. App must be in separate module from `server.listen()` so `supertest` manages server lifecycle.
 
 ## Database Testing
 
-Use SQLite in-memory databases for test isolation — each test or test suite gets a fresh database:
+Use SQLite in-memory databases for test isolation — each test/suite gets fresh DB:
 
 ```js
 const Database = require('better-sqlite3');
@@ -194,7 +194,7 @@ afterEach(async () => {
 
 ### jest.mock / vi.mock
 
-Mock entire modules at the top of the test file:
+Mock entire modules at top of test file:
 
 ```js
 // Jest
@@ -282,8 +282,8 @@ npx vitest run --coverage
 
 ### Test Naming
 
-- `describe` blocks: the function, module, or feature being tested (e.g., `'validateBoardPayload'`, `'POST /api/boards'`).
-- `it` blocks: describe expected behavior in plain language (e.g., `'returns 400 when title is missing'`, `'creates a board with default columns'`).
+- `describe` blocks: function/module/feature under test (e.g., `'validateBoardPayload'`, `'POST /api/boards'`).
+- `it` blocks: expected behavior in plain language (e.g., `'returns 400 when title is missing'`, `'creates a board with default columns'`).
 
 ### Test Behavior, Not Implementation
 
@@ -303,7 +303,7 @@ it('calls db.prepare with the correct SQL', () => {
 
 ### Helpers
 
-Extract common setup into shared test utilities:
+Extract shared setup into test utilities:
 
 ```js
 // test/helpers/setup.js

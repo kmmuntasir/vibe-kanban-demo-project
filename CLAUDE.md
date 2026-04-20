@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## INSTRUCTION
+
+Use caveman mode
+
 ## Project
 
 Workshop demo showcasing AI-assisted development velocity. Express.js backend + vanilla HTML frontend + SQLite. Intentionally partially built — some features are deliberately missing for live implementation during demos.

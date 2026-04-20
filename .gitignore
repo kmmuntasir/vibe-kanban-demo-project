@@ -13,3 +13,6 @@ coverage/
 
 node_modules/
 data/
+
+# macOS
+.DS_Store

@@ -1,12 +1,15 @@
+No file path — text pasted inline. Compressing directly per rules.
+
+---
+
 # RTK (Rust Token Killer) Rules
 
 ## Golden Rule
-**ALWAYS prefix terminal commands with `rtk`** when executing them through `run_command` or similar tools.
+**ALWAYS prefix terminal commands with `rtk`** via `run_command` or similar tools.
 
-RTK intercepts common development commands and compresses their output to save tokens and improve context relevance.
+RTK intercepts dev commands, compresses output. Save tokens, improve context relevance.
 
 ## Recommended Commands
-Use `rtk` for the following workflows:
 
 ### Git Operations
 - `rtk git status`
@@ -27,9 +30,9 @@ Use `rtk` for the following workflows:
 - `rtk gh pr create`
 
 ## Benefits
-- **Token Efficiency**: 60-90% reduction in output tokens.
+- **Token Efficiency**: 60-90% output token reduction.
 - **Speed**: Faster context processing.
-- **Clarity**: Filters out noise and ASCII art.
+- **Clarity**: Filters noise + ASCII art.
 
 ---
-*Note: If a command is not explicitly supported by RTK, it will pass through unchanged. It is always safe to use the `rtk` prefix.*
+*Unsupported commands pass through unchanged. `rtk` prefix always safe.*

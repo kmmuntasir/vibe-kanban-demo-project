@@ -5,17 +5,17 @@ description: Comprehensive JavaScript/Express.js PR review with async safety, er
 
 # PR Review Skill
 
-When the user requests a **PR review** or to **compare branches**:
+When user requests **PR review** or to **compare branches**:
 
 ### Branch Defaults
 
-- **Source branch**: The current local branch. Determine with `git branch --show-current`.
-- **Target branch**: `main`, unless the user explicitly specifies a different branch.
-- If the user specifies both branches, use those values.
+- **Source branch**: Current local branch. Determine with `git branch --show-current`.
+- **Target branch**: `main`, unless user explicitly specifies different.
+- If user specifies both branches, use those values.
 
 ### Pre-Review: Branch Synchronisation
 
-Before starting the review, both branches must be up-to-date and the source must be rebased onto the target (this project uses **Rebase and Merge** on GitHub).
+Before review, both branches must be up-to-date, source rebased onto target (project uses **Rebase and Merge** on GitHub).
 
 **Standard mode** (online):
 
@@ -33,15 +33,15 @@ git checkout <source-branch> && git reset --hard origin/<source-branch>
 git rebase <target-branch>
 ```
 
-**Offline mode**: If the user says **"offline"** when invoking this skill, skip steps 1-3 entirely. Only run the rebase (step 4) against the local copy of the target branch. This allows reviewing purely local state without network access.
+**Offline mode**: If user says **"offline"**, skip steps 1-3. Only run rebase (step 4) against local target branch. Review purely local state without network.
 
-**Conflict handling**: If the rebase in step 4 produces merge conflicts, **stop the entire review**. Abort the rebase (`git rebase --abort`), inform the user of the conflicts, and do not proceed with any review steps.
+**Conflict handling**: If rebase in step 4 produces merge conflicts, **stop review**. Abort rebase (`git rebase --abort`), inform user of conflicts, do not proceed.
 
-**If rebase succeeds**: Proceed to the review steps below.
+**If rebase succeeds**: Proceed to review steps below.
 
 ### Parallel Subagent Strategy
 
-This review can be accelerated using **up to 3 parallel subagents** (via the `Agent` tool). Instead of processing everything sequentially in the main context, split independent review tasks across subagents to save context window and speed up the process. Example parallelisation:
+Accelerate with **up to 3 parallel subagents** (via `Agent` tool). Split independent review tasks across subagents to save context window.
 
 | Subagent | Scope | Agent Type |
 |----------|-------|------------|
@@ -49,13 +49,13 @@ This review can be accelerated using **up to 3 parallel subagents** (via the `Ag
 | 2 | JavaScript/Express.js-specific checks (async, error handling, security) | `general-purpose` |
 | 3 | Test coverage assessment + code quality checklist | `general-purpose` |
 
-**When to parallelise:** Always use parallel subagents when the diff is non-trivial (more than a few files). For tiny diffs (1-2 files, cosmetic changes), a single-pass review is fine.
+**When to parallelise:** Always use parallel subagents for non-trivial diffs (>few files). For tiny diffs (1-2 files, cosmetic), single-pass review fine.
 
-**How to parallelise:** Launch all independent subagents in a single message using multiple `Agent` tool calls. Each subagent should receive the diff (via `git diff`) and its specific review scope. After all subagents return, synthesize their findings into the final review summary (step 6).
+**How to parallelise:** Launch all subagents in single message using multiple `Agent` tool calls. Each subagent receives diff (via `git diff`) + specific review scope. After all return, synthesize findings into final review summary (step 6).
 
 ## 1. Run Complete Diff
 
-Compare the source branch against the target branch and analyze the **actual code changes**, not just commit messages.
+Compare source vs target. Analyze **actual code changes**, not just commit messages.
 
 ```bash
 git diff target..source
@@ -76,96 +76,96 @@ Note: missing tests, incomplete docs, inconsistencies.
 ## 3. Assess Code Quality & Impact
 
 Evaluate:
-- **Correctness**: Does the code work as intended?
-- **Readability**: Is the code understandable?
-- **Maintainability**: Will this be easy to modify later?
-- **Architectural Alignment**: Does it follow the project's patterns?
-- **Performance Implications**: Any performance concerns?
+- **Correctness**: Does code work as intended?
+- **Readability**: Is code understandable?
+- **Maintainability**: Easy to modify later?
+- **Architectural Alignment**: Follows project patterns?
+- **Performance Implications**: Any concerns?
 - **Security Considerations**: Any vulnerabilities?
 
-Check whether tests adequately cover the changes.
+Check whether tests adequately cover changes.
 
 ## 4. JavaScript/Express.js Review Items
 
 ### Error Handling
-- Are async errors caught? Every `await` on a fallible operation wrapped in try/catch or handled by an error-handling middleware?
-- Is there a global Express error-handling middleware (`(err, req, res, next) => { ... }`) with four parameters?
-- Are proper HTTP status codes returned (400 for validation, 401 for auth, 404 for missing, 500 for server errors)?
-- Are errors not silently swallowed (no empty catch blocks)?
-- Are error responses structured as JSON with meaningful messages for clients?
+- Async errors caught? Every `await` on fallible operation in try/catch or error-handling middleware?
+- Global Express error-handling middleware (`(err, req, res, next) => { ... }`) with four parameters?
+- Proper HTTP status codes (400 validation, 401 auth, 404 missing, 500 server)?
+- No silently swallowed errors (no empty catch blocks)?
+- Error responses structured as JSON with meaningful messages?
 
 ### Async Patterns
-- Are all async functions properly marked with `async`?
-- Is `await` used consistently where needed — no unhandled promise rejections?
-- Is there no callback hell — Promises or async/await used throughout?
-- Are `Promise.all()` / `Promise.allSettled()` used for independent parallel operations?
-- Is there no fire-and-forget without `.catch()` — every returned Promise handled?
+- All async functions properly marked `async`?
+- `await` used consistently — no unhandled promise rejections?
+- No callback hell — Promises or async/await throughout?
+- `Promise.all()` / `Promise.allSettled()` for independent parallel operations?
+- No fire-and-forget without `.catch()` — every returned Promise handled?
 
 ### Security
-- Is user input validated and sanitized before use?
-- Are SQL queries using parameterized placeholders (`?`) to prevent injection?
-- Is XSS prevention in place (output encoding, CSP headers)?
-- Is authentication/authorization middleware applied to protected routes?
-- Are secrets only read from environment variables (`process.env`), never hardcoded?
-- Are there no sensitive values in responses or logs?
+- User input validated/sanitized before use?
+- SQL queries use parameterized placeholders (`?`) to prevent injection?
+- XSS prevention in place (output encoding, CSP headers)?
+- Auth middleware applied to protected routes?
+- Secrets only from environment variables (`process.env`), never hardcoded?
+- No sensitive values in responses or logs?
 
 ### Express Patterns
-- Is middleware ordered correctly (logging before auth, auth before routes, error handler last)?
-- Are routes organized logically (grouped by resource, using `express.Router()`)?
-- Is the Express app created in a separate file from server startup for testability?
-- Are route handlers thin — delegating to service functions for business logic?
-- Is `express.json()` body parser used before route handlers that read `req.body`?
+- Middleware ordered correctly (logging → auth → routes → error handler)?
+- Routes organized logically (grouped by resource, `express.Router()`)?
+- Express app created separate from server startup for testability?
+- Route handlers thin — delegating to service functions for business logic?
+- `express.json()` body parser before route handlers reading `req.body`?
 
 ### Resource Management
-- Are database connections properly closed on shutdown?
-- Are file streams and other resources properly cleaned up (using `finally` blocks or `try-with-resources` patterns)?
-- Are event listeners removed when no longer needed to prevent memory leaks?
-- Are temporary files/directories cleaned up after use?
+- Database connections closed on shutdown?
+- File streams/resources cleaned up (`finally` blocks or try-with-resources)?
+- Event listeners removed when no longer needed (prevent memory leaks)?
+- Temporary files/directories cleaned up after use?
 
 ### Code Quality
-- Is module system consistent throughout — all ESM (`import/export`) or all CommonJS (`require/module.exports`)?
-- Are variables declared with `const` by default, `let` only when reassignment is needed — never `var`?
-- Are functions kept short and focused (<50 lines)?
-- Is early return used to reduce nesting?
-- Is there no dead code or commented-out blocks in production?
+- Module system consistent — all ESM (`import/export`) or all CommonJS (`require/module.exports`)?
+- `const` by default, `let` only when reassignment needed — never `var`?
+- Functions short, focused (<50 lines)?
+- Early return used to reduce nesting?
+- No dead code or commented-out blocks in production?
 
 ### Logging
-- Is structured logging used (e.g., `pino`, `winston`) instead of `console.log`?
-- Are sensitive values (secrets, tokens, passwords) never logged?
-- Are log levels used appropriately (error for failures, info for significant events, debug for tracing)?
-- Is there no `console.log`, `console.error`, or `console.warn` left in production code?
+- Structured logging (`pino`, `winston`) instead of `console.log`?
+- Sensitive values (secrets, tokens, passwords) never logged?
+- Log levels used appropriately (error failures, info significant events, debug tracing)?
+- No `console.log`, `console.error`, or `console.warn` in production code?
 
 ## 5. Test Coverage
 
-- Are tests written with Jest or Vitest using `describe`/`it` blocks?
-- Are HTTP handlers tested with `supertest` against the Express app?
-- Is SQLite using in-memory databases (`:memory:`) or temporary files for test isolation?
-- Are async handlers tested for both success and error paths?
-- Are mocks/stubs used for external dependencies (database, file system, HTTP calls)?
-- Are edge cases covered (empty input, invalid input, missing fields, boundary values)?
+- Tests with Jest or Vitest using `describe`/`it` blocks?
+- HTTP handlers tested with `supertest` against Express app?
+- SQLite using in-memory (`:memory:`) or temp files for test isolation?
+- Async handlers tested for both success and error paths?
+- Mocks/stubs for external dependencies (database, file system, HTTP)?
+- Edge cases covered (empty input, invalid input, missing fields, boundary values)?
 
 ## 6. Provide Senior-Level Review Summary
 
-Offer direct, actionable feedback:
+Direct, actionable feedback:
 - Call out risks
 - Highlight strengths
 - Suggest improvements
-- Indicate whether changes are ready to merge or need revisions
+- Indicate ready to merge or needs revisions
 
 ## 7. Aim for Practical, High-Value Feedback
 
-The goal is to emulate a real PR review from an experienced engineer — clear, specific, and focused on what matters.
+Emulate real PR review from experienced engineer — clear, specific, focused on what matters.
 
-## 8. Write a comprehensive PR review report
+## 8. Write PR Review Report
 
-Write a comprehensive PR review report in a markdown file and save it in the `./docs/ai_generated` directory. The report should include:
+Write comprehensive PR review report in markdown, save in `./docs/ai_generated`. Include:
 - Summary of changes
 - Code quality assessment
 - Performance considerations
 - Security implications
 - Testing coverage
 - Recommendations
-- Whether changes are ready to merge or need revisions
+- Ready to merge or needs revisions
 
 ---
 
