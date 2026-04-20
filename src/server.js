@@ -1,5 +1,5 @@
 import app from './app.js'
-import { initDatabase } from '../database/init.js'
+import { initDatabase } from './database/init.js'
 
 const PORT = process.env.PORT || 3000
 

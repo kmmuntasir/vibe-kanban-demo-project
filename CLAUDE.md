@@ -72,7 +72,7 @@ These features are deliberately unimplemented — they're meant to be built live
 
 ## Database
 
-Schema created on server startup via `database/init.js`. Single `users` table with: `id`, `username`, `full_name`, `email`, `phone`, `created_at`.
+Schema created on server startup via `src/database/init.js`. Single `users` table with: `id`, `username`, `full_name`, `email`, `phone`, `created_at`.
 
 ## PRD
 
