@@ -68,8 +68,16 @@
   </div>
 
   <script>
-    function fetchUsers() {
-      // TODO: Implement in workshop
+    async function fetchUsers() {
+      try {
+        const res = await fetch('/api/users')
+        if (!res.ok) throw new Error('Failed to fetch users')
+        const users = await res.json()
+        renderUsers(users)
+        hideError()
+      } catch (err) {
+        showError(err.message)
+      }
     }
 
     async function addUser(event) {
@@ -96,7 +104,20 @@
     }
 
     function renderUsers(users) {
-      // TODO: Implement in workshop
+      const tbody = document.getElementById('user-table-body')
+      tbody.innerHTML = ''
+
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr class="placeholder-row"><td colspan="6">No users found</td></tr>'
+        return
+      }
+
+      for (const u of users) {
+        const tr = document.createElement('tr')
+        const date = u.created_at ? new Date(u.created_at + 'Z').toLocaleString() : ''
+        tr.innerHTML = `<td>${u.id}</td><td>${u.username}</td><td>${u.full_name}</td><td>${u.email}</td><td>${u.phone ?? ''}</td><td>${date}</td>`
+        tbody.appendChild(tr)
+      }
     }
 
     function showError(message) {
@@ -110,6 +131,7 @@
     }
 
     document.getElementById('add-user-form').addEventListener('submit', addUser);
+    document.addEventListener('DOMContentLoaded', fetchUsers);
   </script>
 </body>
 </html>
