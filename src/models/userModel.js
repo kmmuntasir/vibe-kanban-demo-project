@@ -22,6 +22,8 @@ export const CREATE_TABLE_SQL = `
 
 export const INSERT_COLUMNS = ['username', 'full_name', 'email', 'phone'];
 
+export const UPDATE_COLUMNS = ['username', 'full_name', 'email', 'phone'];
+
 export const VALIDATION_RULES = {
   username: {
     required: true,
