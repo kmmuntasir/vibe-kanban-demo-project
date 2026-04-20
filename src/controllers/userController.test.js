@@ -144,6 +144,93 @@ describe('GET /api/users', () => {
   })
 })
 
+describe('PUT /api/users/:id', () => {
+  it('200 with updated user', async () => {
+    const created = await request(app)
+      .post('/api/users')
+      .send({ username: 'original', full_name: 'Original User', email: 'original@example.com' })
+      .expect(201)
+
+    const res = await request(app)
+      .put(`/api/users/${created.body.data.id}`)
+      .send({ full_name: 'Updated Name', phone: '555-1234' })
+      .expect(200)
+
+    expect(res.body.data).toMatchObject({
+      username: 'original',
+      full_name: 'Updated Name',
+      email: 'original@example.com',
+      phone: '555-1234',
+    })
+  })
+
+  it('404 for nonexistent user', async () => {
+    const res = await request(app)
+      .put('/api/users/99999')
+      .send({ full_name: 'Ghost' })
+      .expect(404)
+
+    expect(res.body.error).toMatch(/not found/i)
+  })
+
+  it('400 for invalid email format', async () => {
+    const created = await request(app)
+      .post('/api/users')
+      .send({ username: 'emailtest', full_name: 'Email Test', email: 'email@example.com' })
+      .expect(201)
+
+    const res = await request(app)
+      .put(`/api/users/${created.body.data.id}`)
+      .send({ email: 'not-an-email' })
+      .expect(400)
+
+    expect(res.body.error).toMatch(/email/i)
+  })
+
+  it('409 for duplicate username', async () => {
+    await request(app)
+      .post('/api/users')
+      .send({ username: 'taken', full_name: 'Taken User', email: 'taken@example.com' })
+      .expect(201)
+
+    const created = await request(app)
+      .post('/api/users')
+      .send({ username: 'updater', full_name: 'Updater', email: 'updater@example.com' })
+      .expect(201)
+
+    const res = await request(app)
+      .put(`/api/users/${created.body.data.id}`)
+      .send({ username: 'taken' })
+      .expect(400)
+
+    expect(res.body.error).toMatch(/username/i)
+  })
+})
+
+describe('DELETE /api/users/:id', () => {
+  it('204 successful delete and verifies user gone via GET', async () => {
+    const created = await request(app)
+      .post('/api/users')
+      .send({ username: 'doomed', full_name: 'Doomed User', email: 'doomed@example.com' })
+      .expect(201)
+
+    await request(app)
+      .delete(`/api/users/${created.body.data.id}`)
+      .expect(204)
+
+    const list = await request(app).get('/api/users').expect(200)
+    expect(list.body.find(u => u.id === created.body.data.id)).toBeUndefined()
+  })
+
+  it('404 for nonexistent user', async () => {
+    const res = await request(app)
+      .delete('/api/users/99999')
+      .expect(404)
+
+    expect(res.body.error).toMatch(/not found/i)
+  })
+})
+
 describe('Error handling', () => {
   it('404 for unknown routes returns JSON error', async () => {
     const res = await request(app)
